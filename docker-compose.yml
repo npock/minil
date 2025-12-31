@@ -1,0 +1,30 @@
+services:
+  chat-db:
+    image: mongo:latest
+    container_name: chat-db
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
+    ports:
+      - "27018:27017" # Порт 27018 снаружи, чтобы не конфликтовать с прошлым проектом
+    volumes:
+      - chat_data:/data/db
+
+  chat-server:
+    build:
+      context: .
+      dockerfile: ./server/Dockerfile
+    container_name: chat-server
+    restart: always
+    depends_on:
+      - chat-db
+    ports:
+      - "3001:3000" # Бэкенд будет на 3000 внутри, на 3001 снаружи
+    env_file:
+      - .env
+    environment:
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@chat-db:27017/messenger?authSource=admin
+
+volumes:
+  chat_data:
